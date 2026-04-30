@@ -2,10 +2,10 @@
   "name": "field-deploy-dashboard",
   "version": "1.0.0",
   "type": "module",
-  "main": "backend/src/main.js",
+  "main": "src/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node backend/src/main.js"
+    "start": "node src/main.js"
   },
   "keywords": [],
   "author": "",
