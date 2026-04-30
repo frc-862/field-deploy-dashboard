@@ -1,0 +1,21 @@
+{
+  "name": "field-deploy-dashboard",
+  "version": "1.0.0",
+  "description": "The root of the field deploy dashboard project for team 862",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "frontend": "cd frontend && npm start",
+    "backend": "cd backend && npm start",
+    "dev": "npm run frontend & npm run backend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frc-862/field-deploy-dashboard.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/frc-862/field-deploy-dashboard/issues"
+  },
+  "homepage": "https://github.com/frc-862/field-deploy-dashboard#readme"
+}
