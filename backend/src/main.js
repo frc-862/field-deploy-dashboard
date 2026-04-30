@@ -1,10 +1,14 @@
 import express from 'express';
 import cameraRouter from './camera.js';
+import { cleanup } from './camera.js';
 
 const app = express();
 
 // Include the camera router with the main express app
 app.use('/camera', cameraRouter);
+
+// When the server is closed, cleanup the ffmpeg process
+app.on('close', cleanup);
 
 // Start the server on port 3000
 app.listen(3000, () => {

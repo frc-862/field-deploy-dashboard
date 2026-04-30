@@ -1,44 +1,50 @@
 import express from 'express';
-// Library to help execute terminal commands in their own process
-import { execFile } from 'node:child_process';
-// Library that turns old callback-based functions into promises
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 
 const router = express.Router();
 
 // Function to return parameters for ffmpeg command
-const getParams = (device = '0') => {
+const getParams = () => {
   return [
-    '-f', 'avfoundation', // Input format (AVFoundation for macOS)
-    '-framerate', '30', // The frame rate request from camera encoder
-    '-i', `${device}:none`, // The device to use for input (0 is the first available video device)
-    '-frames:v', '1', // The number of frames to capture
-    '-f', 'mjpeg', // Output format (MJPEG)
-    '-q:v', '2', // The quality of the output (lower value = higher quality)
-    'pipe:1' // Write the output to stdout
+    '-f', 'avfoundation', // Use avfoundation for macOS
+    '-framerate', '30', // Frame rate to use from the input device
+    '-pixel_format', 'uyvy422', // Pixel format to use from the input device
+    '-video_size', '1280x720', // Video size to use from the input device
+    '-i', '0:none', // Input device to use
+    '-vf', 'fps=15', // Frame rate to use for the output
+    '-q:v', '15', // Quality (how much compression to use) of the output
+    '-f', 'mpjpeg', // Output format
+    'pipe:1' // Output to pipe 1 (stdout)
   ]
 } 
 
-// Promisify the execFile function to use with async/await
-const execFileAsync = promisify(execFile);
+// Execute the ffmpeg command with the parameters
+const ffmpegProcess = spawn('ffmpeg', getParams())
+
+export const cleanup = () => {
+    if (!ffmpegProcess.killed) {
+        ffmpegProcess.kill('SIGTERM');
+    }
+}
 
 // Route to get a snapshot from the camera
-router.get('/snapshot', async (req, res) => {
+router.get('/stream', (req, res) => {
     try {
-        // Execute the ffmpeg command with the parameters
-        const { stdout } = await execFileAsync(
-            'ffmpeg', 
-            getParams(0), // Get the parameters for the ffmpeg command
-            { encoding: 'buffer', maxBuffer: 1024 * 1024 * 10 }); // Set the encoding to buffer and the max buffer to 10MB
+        // Defines how we will send the data to the client
+        res.writeHead(200, {
+          "Content-Type": "multipart/x-mixed-replace; boundary=ffmpeg", 
+        });
         
-        // Set the content type for the client will expect to receive to be image/jpeg
-        res.type('image/jpeg');
+        // Pipe the stdout of the ffmpeg process directly to the client because it's already in the correct format
+        ffmpegProcess.stdout.pipe(res);
 
-        // Send the buffer output of the ffmpeg command
-        res.send(stdout);
+        // Logging for errors and individual frame data
+        ffmpegProcess.stderr.on('data', (chunk) => {
+          console.error(chunk.toString());
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json({message: 'Error getting snapshot'});
+        res.status(500).json({message: 'Error getting stream'});
     }
 });
 
