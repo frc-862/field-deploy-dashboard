@@ -2,12 +2,11 @@
   "name": "field-deploy-dashboard",
   "version": "1.0.0",
   "description": "The root of the field deploy dashboard project for team 862",
-  "main": "_.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "frontend": "cd frontend && npm start",
     "backend": "cd backend && npm start",
-    "start": "npm run frontend & npm run backend"
+    "dev": "npm run frontend & npm run backend"
   },
   "repository": {
     "type": "git",
