@@ -1,0 +1,27 @@
+{
+    "tabWidth": 4,
+    "useTabs": false,
+
+    "semi": true,
+    "singleQuote": true,
+    "quoteProps": "as-needed",
+
+    "trailingComma": "es5",
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+
+    "arrowParens": "always",
+    "printWidth": 120,
+
+    "endOfLine": "lf",
+
+    "overrides": [
+        {
+            "files": "*.json",
+            "options": {
+                "tabWidth": 4,
+                "printWidth": 120
+            }
+        }
+    ]
+}
