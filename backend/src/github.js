@@ -17,7 +17,7 @@ router.get('/clone/:repo', async (req, res) => {
         const gitClone = spawn('git', ['clone', repoUrl, repoPath]);
 
         // Attach the real result of the command to the response
-        gitClone.on('close', (code) => {
+gitClone.on('close', (code) => {
             if (code === 0) {
                 return res
                     .status(200)
