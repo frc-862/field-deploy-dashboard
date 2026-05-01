@@ -26,6 +26,5 @@ jobs:
         uses: creyD/prettier_action@v4.3
         with:
           # This tells it to overwrite files with the formatted version
-          prettier_options: --write .
-          # Only commits if there were actually changes to make
+          prettier_options: --write . --ignore-path .prettierignore
           commit_message: "style: fixed formatting with prettier"
