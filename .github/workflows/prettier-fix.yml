@@ -1,35 +1,31 @@
-name: Prettier Auto-Fix
+name: Prettier Check
 
 on:
+  # This runs during the PR process (to catch errors early)
   pull_request:
     branches: [main]
+  # This runs on the merge commit itself once it lands in main
+  push:
+    branches: [main]
+  # Allows you to trigger it manually from the Actions tab to test it
+  workflow_dispatch: 
 
 jobs:
   prettier:
     runs-on: ubuntu-latest
-    # Crucial: The job needs write permissions to push back to the branch
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout code
-        uses: [actions/checkout@v4](https://github.com/actions/checkout)
-        with:
-          # Use the head_ref to ensure we are on the PR branch, not a detached head
-          ref: ${{ github.head_ref }}
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: [actions/setup-node@v4](https://github.com)
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci # Faster than npm install for CI
+        # 'npm ci' is faster and cleaner for CI/CD
+        run: npm ci || npm install 
 
-      - name: Run Prettier (fix)
-        run: npx prettier --write .
-
-      - name: Commit changes
-        uses: [stefanzweifel/git-auto-commit-action@v5](https://github.com/stefanzweifel/git-auto-commit-action)
-        with:
-          commit_message: "chore: auto-format code with Prettier"
+      - name: Run Prettier check
+        # This will exit with an error code if anything is unformatted
+        run: npx prettier --check .
