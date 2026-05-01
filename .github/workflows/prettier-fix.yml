@@ -1,35 +1,31 @@
 name: Prettier Auto-Fix
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
   prettier:
     runs-on: ubuntu-latest
-    # Crucial: The job needs write permissions to push back to the branch
+    # Required to allow the action to push changes back to your repo
     permissions:
       contents: write
 
     steps:
       - name: Checkout code
-        uses: [actions/checkout@v4](https://github.com/actions/checkout)
+        uses: actions/checkout@v4
         with:
-          # Use the head_ref to ensure we are on the PR branch, not a detached head
+          # Fetch all history so the action can commit and push back
+          fetch-depth: 0
+          # Ensure it uses the head of the PR, not the merge commit
           ref: ${{ github.head_ref }}
 
-      - name: Setup Node.js
-        uses: [actions/setup-node@v4](https://github.com)
+      - name: Prettify code
+        uses: creyD/prettier_action@v4.3
         with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci # Faster than npm install for CI
-
-      - name: Run Prettier (fix)
-        run: npx prettier --write .
-
-      - name: Commit changes
-        uses: [stefanzweifel/git-auto-commit-action@v5](https://github.com/stefanzweifel/git-auto-commit-action)
-        with:
-          commit_message: "chore: auto-format code with Prettier"
+          # This tells it to overwrite files with the formatted version
+          prettier_options: --write .
+          # Only commits if there were actually changes to make
+          commit_message: "style: fixed formatting with prettier"
