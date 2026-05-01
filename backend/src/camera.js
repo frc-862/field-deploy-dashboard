@@ -40,8 +40,7 @@ const startFFmpeg = () => {
     }
   })
 
-  let frameCount = 0;
-  const frameLogFrequency = 100;
+
   // Logging for errors and individual frame data
   ffmpegProcess.stderr.on('data', (chunk) => {
     const data = chunk.toString();
@@ -53,10 +52,7 @@ const startFFmpeg = () => {
 
     // Log frames by the frequency
     if (data.includes('frame')) {
-      frameCount++;
-      if (frameCount % frameLogFrequency === 0) {
-        // console.log(`${data}\n`);
-      }
+      // TODO: Create some logging system that doesn't log directly to the terminal
     }
   });
   ffmpegOn = true;
@@ -72,8 +68,9 @@ const stopFFmpeg = () => {
 // Kills the ffmpeg process
 export const cleanup = () => {
   try {
-    if (!ffmpegProcess.killed) {
-        ffmpegProcess.kill('SIGTERM');
+    if (ffmpegProcess && !ffmpegProcess.killed) {
+      // Requests for the process (ffmpeg) to be killed
+      ffmpegProcess.kill('SIGTERM');
     }
   } catch (error) {
     console.error(error);
@@ -87,43 +84,32 @@ router.get('/stream', (req, res) => {
         // Defines how we will send the data to the client
         res.writeHead(200, {
           "Content-Type": "multipart/x-mixed-replace; boundary=ffmpeg", 
+          'Cache-Control': 'no-store' // Don't cache each frame or the response
         });
         res.flushHeaders();
 
-        setTimeout(() => {
-          console.log('Headers sent');
-        }, 5000); 
-
+        // Start the ffmpeg process if this is the first client being added
         if (clients.size === 0) {
           startFFmpeg();
         }
 
+        // Add the client to the set of clients
         clients.add(res);
         console.log('Added client, total clients:', clients.size)
 
-        req.on('close', () => {
-          if (clients.delete(res)) console.log('Removed client by close, total clients:', clients.size)
+        // Helper function to disconnect the client
+        const disconnect = (type = 'unknown') => {
+          if (clients.delete(res)) console.log(`Removed client by ${type}, total clients:`, clients.size)
           
           if (clients.size === 0) {
             stopFFmpeg();
           }
-        });
+        }
 
-        req.on('aborted', () => {
-          if (clients.delete(res)) console.log('Removed client by aborted, total clients:', clients.size)
-
-          if (clients.size === 0) {
-            stopFFmpeg();
-          } 
-        });
-
-        req.on('error', () => {
-          if (clients.delete(res)) console.log('Removed client by error, total clients:', clients.size)
-          
-          if (clients.size === 0) {
-            stopFFmpeg();
-          } 
-        });
+        // Clean up the client when the request is closed, aborted, or an error occurs
+        req.on('close', () => disconnect('close'));
+        req.on('aborted', () => disconnect('aborted'));
+        req.on('error', () => disconnect('error'));
     } catch (error) {
         console.error(error);
 
