@@ -1,0 +1,31 @@
+name: Prettier Check
+
+on:
+    # This runs during the PR process (to catch errors early)
+    pull_request:
+        branches: [main]
+    # This runs on the merge commit itself once it lands in main
+    push:
+        branches: [main]
+    # Allows you to trigger it manually from the Actions tab to test it
+    workflow_dispatch:
+
+jobs:
+    prettier:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+
+            - name: Install dependencies
+              # 'npm ci' is faster and cleaner for CI/CD
+              run: npm ci || npm install
+
+            - name: Run Prettier check
+              # This will exit with an error code if anything is unformatted
+              run: npx prettier --check .

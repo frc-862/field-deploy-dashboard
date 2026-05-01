@@ -14,14 +14,15 @@ app.on('close', cleanup);
 
 // Start the server on port 3000
 app.listen(3000, () => {
-    console.log('=================================== \n Server is running on port 3000 ✅\n=================================== \n');
+    console.log(
+        '=================================== \n Server is running on port 3000 ✅\n=================================== \n'
+    );
 
-  // This can only run on MacOS since it will run with the Mac Mini-- built wiht only mac support in mind
-  if (process.platform !== 'darwin') {
-    console.log('Must be run on a Mac ❌');
-    process.exit(1);
-  }
+    // This can only run on MacOS since it will run with the Mac Mini-- built wiht only mac support in mind
+    if (process.platform !== 'darwin') {
+        console.log('Must be run on a Mac ❌');
+        process.exit(1);
+    }
 });
-
 
 // Comment to test prettier

@@ -1,27 +1,27 @@
 {
-  "name": "frontend",
-  "version": "0.0.1",
-  "private": true,
-  "description": "The frontend for the Field Deploy Dashboard for team 862",
-  "main": "src/main.tsx",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "start": "vite",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.0.0",
-    "typescript": "^5.1.0",
-    "vite": "^5.1.0"
-  }
+    "name": "frontend",
+    "version": "0.0.1",
+    "private": true,
+    "description": "The frontend for the Field Deploy Dashboard for team 862",
+    "main": "src/main.tsx",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "start": "vite",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "react": "^18.3.1",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^4.0.0",
+        "typescript": "^5.1.0",
+        "vite": "^5.1.0"
+    }
 }
