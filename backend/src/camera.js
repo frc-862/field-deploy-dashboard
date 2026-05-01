@@ -55,7 +55,7 @@ const startFFmpeg = () => {
     if (data.includes('frame')) {
       frameCount++;
       if (frameCount % frameLogFrequency === 0) {
-        console.log(`${data}\n`);
+        // console.log(`${data}\n`);
       }
     }
   });
@@ -71,14 +71,29 @@ const stopFFmpeg = () => {
 
 // Kills the ffmpeg process
 export const cleanup = () => {
+  try {
     if (!ffmpegProcess.killed) {
         ffmpegProcess.kill('SIGTERM');
     }
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 // Route to get a snapshot from the camera
 router.get('/stream', (req, res) => {
     try {
+        // Do this before anything can have an opprotunity to get sent to client
+        // Defines how we will send the data to the client
+        res.writeHead(200, {
+          "Content-Type": "multipart/x-mixed-replace; boundary=ffmpeg", 
+        });
+        res.flushHeaders();
+
+        setTimeout(() => {
+          console.log('Headers sent');
+        }, 5000); 
+
         if (clients.size === 0) {
           startFFmpeg();
         }
@@ -86,33 +101,28 @@ router.get('/stream', (req, res) => {
         clients.add(res);
         console.log('Added client, total clients:', clients.size)
 
-        // Defines how we will send the data to the client
-        res.writeHead(200, {
-          "Content-Type": "multipart/x-mixed-replace; boundary=ffmpeg", 
-        });
-
         req.on('close', () => {
-          clients.delete(res);
-          console.log('Removed client, total clients:', clients.size)
+          if (clients.delete(res)) console.log('Removed client by close, total clients:', clients.size)
+          
           if (clients.size === 0) {
             stopFFmpeg();
           }
         });
 
         req.on('aborted', () => {
-          clients.delete(res);
-          console.log('Removed client by aborted, total clients:', clients.size)
+          if (clients.delete(res)) console.log('Removed client by aborted, total clients:', clients.size)
+
           if (clients.size === 0) {
             stopFFmpeg();
-          }
+          } 
         });
 
-        req.on('error', (_) => {
-          clients.delete(res);
-          console.log('Removed client by error, total clients:', clients.size)
+        req.on('error', () => {
+          if (clients.delete(res)) console.log('Removed client by error, total clients:', clients.size)
+          
           if (clients.size === 0) {
             stopFFmpeg();
-          }
+          } 
         });
     } catch (error) {
         console.error(error);
