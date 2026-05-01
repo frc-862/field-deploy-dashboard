@@ -1,11 +1,13 @@
 import express from 'express';
 import cameraRouter from './camera.js';
+import githubRouter from './github.js';
 import { cleanup } from './camera.js';
 
 const app = express();
 
 // Include the camera router with the main express app
 app.use('/camera', cameraRouter);
+app.use('/github', githubRouter);
 
 // When the server is closed, cleanup the ffmpeg process
 app.on('close', cleanup);
