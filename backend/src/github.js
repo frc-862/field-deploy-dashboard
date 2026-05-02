@@ -27,7 +27,7 @@ router.post('/repos/:repo/clone', async (req, res) => {
                 .status(400)
                 .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
 
-        const repoPath = path.join(process.cwd(), "../", 'repos', repo);
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
         // Create the full git url using the repo name
         const repoUrl = `https://github.com/frc-862/${repo}.git`;
@@ -58,7 +58,7 @@ router.post('/repos/:repo/clone', async (req, res) => {
 router.get('/repos', async (req, res) => {
     try {
         // Read the repos directory and list all the repositories
-        const repos = fs.readdirSync(path.join(process.cwd(), "../", 'repos'));
+        const repos = fs.readdirSync(path.join(process.cwd(), '../', 'repos'));
         return res.status(200).json({ message: 'Repositories listed successfully', data: repos });
     } catch (error) {
         return res.status(500).json({ message: 'Error listing repositories', error: error.message });
@@ -74,7 +74,7 @@ router.get('/repos/:repo/branches', async (req, res) => {
                 .status(400)
                 .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
 
-        const repoPath = path.join(process.cwd(), "../", 'repos', repo);
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
         // Run the git branch command using the repo path and list the branches-- formats the branches with no *
         const gitBranch = spawn('git', ['branch', '-r', '--format="%(refname:short)"'], { cwd: repoPath });
@@ -103,12 +103,10 @@ router.get('/repos/:repo/branches', async (req, res) => {
 
         // Handle the errors from the seperate processes
         gitBranch.on('error', () => {
-            return res
-                .status(500)
-                .json({
-                    message: 'Error listing branches',
-                    error: 'Git branch command failed. Have you cloned the repo yet?',
-                });
+            return res.status(500).json({
+                message: 'Error listing branches',
+                error: 'Git branch command failed. Have you cloned the repo yet?',
+            });
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error listing branches', error: error.message });
@@ -126,7 +124,7 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
                 .status(400)
                 .json({ message: 'Invalid branch name', error: 'Branch name contains invalid characters' });
 
-        const repoPath = path.join(process.cwd(), "../", 'repos', repo);
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
         // Run the git checkout command using the branch name and checkout the branch
         const gitCheckout = spawn('git', ['checkout', branch], { cwd: repoPath });
@@ -134,19 +132,15 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
         // Attach the real result of the command to the response
         gitCheckout.on('close', (code) => {
             if (code === 0) {
-                return res
-                    .status(200)
-                    .json({
-                        message: 'Branch checked out successfully',
-                        data: { repoPath, repoName: repo, branch: branch },
-                    });
+                return res.status(200).json({
+                    message: 'Branch checked out successfully',
+                    data: { repoPath, repoName: repo, branch: branch },
+                });
             } else {
-                return res
-                    .status(500)
-                    .json({
-                        message: 'Error checking out branch',
-                        error: 'Git checkout command failed. Is the branch name valid?',
-                    });
+                return res.status(500).json({
+                    message: 'Error checking out branch',
+                    error: 'Git checkout command failed. Is the branch name valid?',
+                });
             }
         });
 
