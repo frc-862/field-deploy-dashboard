@@ -29,19 +29,19 @@ const getParams = () => {
         'pipe:1', // Output to pipe 1 (stdout)
 
         // output 2 for saved mp4 recording
-        '-vf', 
-        'fps=30',        // keep full 30fps
-        '-vcodec', 
-        'libx264',   // H.264 encoding
-        '-preset', 
-        'fast',      // encoding speed vs compression tradeoff
-        '-crf', 
-        '18',           // quality - 18 is near-lossless
-        '-movflags', 
+        '-vf',
+        'fps=30', // keep full 30fps
+        '-vcodec',
+        'libx264', // H.264 encoding
+        '-preset',
+        'fast', // encoding speed vs compression tradeoff
+        '-crf',
+        '18', // quality - 18 is near-lossless
+        '-movflags',
         'frag_keyframe+empty_moov', // makes MP4 streamable/writable to a pipe
-        '-f', 
+        '-f',
         'mp4',
-        'pipe:3',               // write to file descriptor 3
+        'pipe:3', // write to file descriptor 3
     ];
 };
 
