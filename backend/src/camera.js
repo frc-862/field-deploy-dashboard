@@ -21,7 +21,7 @@ const getParams = () => {
 
         // output 1 for low quality stream
         '-vf',
-        'fps=15', // Frame rate to use for the output, also scale down to 360p
+        'fps=15', // Frame rate to use for the output
         '-q:v',
         '15', // Quality (how much compression to use) of the output
         '-f',
