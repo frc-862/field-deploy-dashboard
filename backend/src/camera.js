@@ -68,7 +68,7 @@ const startFFmpeg = () => {
     console.log(`Recording to: ${filepath}`);
 
     ffmpegProcess = spawn('ffmpeg', getParams(), {
-        stdio: ['ignore', 'pipe', 'pipe', 'pipe'] // ignore stdin, pipe stdout and stderr, 3 is custom pipe for mp4
+        stdio: ['ignore', 'pipe', 'pipe', 'pipe'], // ignore stdin, pipe stdout and stderr, 3 is custom pipe for mp4
     });
 
     // Pipe the stdout of the ffmpeg process directly to the client because it's already in the correct format
@@ -91,7 +91,7 @@ const startFFmpeg = () => {
 
     ffmpegProcess.stdio[3].on('end', () => {
         // End the recording stream for the mp4 when ffmpeg finishes to prevent video corrupting or ending early
-        recordingStream.end(); 
+        recordingStream.end();
         console.log(`Finished recording gracefully: ${filepath}`);
     });
 
