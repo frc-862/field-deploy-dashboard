@@ -1,7 +1,7 @@
 import express from 'express';
 import cameraRouter from './camera.js';
 import githubRouter from './github.js';
-import { cleanup } from './camera.js';
+import { cleanupFfmpeg, cleanupRecordingStream } from './camera.js';
 
 const app = express();
 
@@ -10,7 +10,10 @@ app.use('/camera', cameraRouter);
 app.use('/github', githubRouter);
 
 // When the server is closed, cleanup the ffmpeg process
-app.on('close', cleanup);
+app.on('close', () => {
+    cleanupFfmpeg();
+    cleanupRecordingStream();
+});
 
 // Start the server on port 3000
 app.listen(3000, () => {

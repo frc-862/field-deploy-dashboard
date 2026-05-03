@@ -1,5 +1,7 @@
 import express from 'express';
 import { spawn } from 'node:child_process';
+import { createWriteStream, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const router = express.Router();
 
@@ -13,16 +15,33 @@ const getParams = () => {
         '-pixel_format',
         'uyvy422', // Pixel format to use from the input device
         '-video_size',
-        '1280x720', // Video size to use from the input device
+        '1920x1080', // Video size to use from the input device
         '-i',
         '0:none', // Input device to use
+
+        // output 1 for low quality stream
         '-vf',
-        'fps=15', // Frame rate to use for the output
+        'fps=15, scale=iw/2:ih/2', // Frame rate to use for the output and half the resolution
         '-q:v',
         '15', // Quality (how much compression to use) of the output
         '-f',
         'mpjpeg', // Output format
         'pipe:1', // Output to pipe 1 (stdout)
+
+        // output 2 for saved mp4 recording
+        '-vf',
+        'fps=30', // keep full 30fps
+        '-vcodec',
+        'libx264', // H.264 encoding
+        '-preset',
+        'fast', // encoding speed vs compression tradeoff
+        '-crf',
+        '18', // quality - 18 is near-lossless
+        '-movflags',
+        'frag_keyframe+empty_moov', // makes MP4 streamable/writable to a pipe
+        '-f',
+        'mp4',
+        'pipe:3', // write to file descriptor 3
     ];
 };
 
@@ -30,14 +49,30 @@ const getParams = () => {
 let ffmpegProcess = null;
 let ffmpegOn = false;
 let clients = new Set();
+let recordingStream = null; // stream to write the mp4 recording to
 
 const startFFmpeg = () => {
     if (ffmpegOn) return;
     console.log('======== Starting ffmpeg ========');
-    ffmpegProcess = spawn('ffmpeg', getParams());
+
+    // Creates the recordings directory if it doesn't exist
+    mkdirSync('../recordings', { recursive: true });
+
+    // Creates the filename for the recording
+    const now = new Date();
+    const filename = `recording_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}.mp4`;
+    const filepath = join('../recordings', filename);
+
+    // Creates a stream into a file (which is at the path defined above)
+    recordingStream = createWriteStream(filepath);
+    console.log(`Recording to: ${filepath}`);
+
+    ffmpegProcess = spawn('ffmpeg', getParams(), {
+        stdio: ['ignore', 'pipe', 'pipe', 'pipe'], // ignore stdin, pipe stdout and stderr, 3 is custom pipe for mp4
+    });
 
     // Pipe the stdout of the ffmpeg process directly to the client because it's already in the correct format
-    ffmpegProcess.stdout.on('data', (chunk) => {
+    ffmpegProcess.stdio[1].on('data', (chunk) => {
         for (const res of clients) {
             try {
                 // Write the chunk to the client
@@ -46,6 +81,18 @@ const startFFmpeg = () => {
                 console.error(error);
             }
         }
+    });
+
+    // mp4 chunks come in through pipe 3
+    ffmpegProcess.stdio[3].on('data', (chunk) => {
+        // Write the chunk to the recording stream which leads to the mp4 file
+        recordingStream.write(chunk);
+    });
+
+    ffmpegProcess.stdio[3].on('end', () => {
+        // End the recording stream for the mp4 when ffmpeg finishes to prevent video corrupting or ending early
+        recordingStream.end();
+        console.log(`Finished recording gracefully: ${filepath}`);
     });
 
     // Logging for errors and individual frame data
@@ -62,22 +109,36 @@ const startFFmpeg = () => {
             // TODO: Create some logging system that doesn't log directly to the terminal
         }
     });
+
     ffmpegOn = true;
 };
 
 const stopFFmpeg = () => {
     if (!ffmpegOn) return;
     console.log('======== Stopping ffmpeg ========');
-    cleanup();
+    cleanupFfmpeg();
     ffmpegOn = false;
 };
 
 // Kills the ffmpeg process
-export const cleanup = () => {
+export const cleanupFfmpeg = () => {
     try {
         if (ffmpegProcess && !ffmpegProcess.killed) {
             // Requests for the process (ffmpeg) to be killed
             ffmpegProcess.kill('SIGTERM');
+            console.log('ffmpeg process killed');
+        }
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// Ends the recording stream
+export const cleanupRecordingStream = () => {
+    try {
+        if (recordingStream && !recordingStream.writableEnded) {
+            recordingStream.end();
+            console.log('Recording stream ended');
         }
     } catch (error) {
         console.error(error);
@@ -94,6 +155,8 @@ router.get('/stream', (req, res) => {
             'Cache-Control': 'no-store', // Don't cache each frame or the response
         });
         res.flushHeaders();
+
+        console.log('Client IP:', req.ip);
 
         // Start the ffmpeg process if this is the first client being added
         if (clients.size === 0) {
