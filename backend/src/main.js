@@ -3,7 +3,7 @@ import cameraRouter from './camera.js';
 import githubRouter from './github.js';
 import wpilibRouter from './wpilib.js';
 
-import { cleanup } from './camera.js';
+import { cleanupFfmpeg, cleanupRecordingStream } from './camera.js';
 
 const app = express();
 
@@ -13,7 +13,10 @@ app.use('/github', githubRouter);
 app.use('/wpilib', wpilibRouter);
 
 // When the server is closed, cleanup the ffmpeg process
-app.on('close', cleanup);
+app.on('close', () => {
+    cleanupFfmpeg();
+    cleanupRecordingStream();
+});
 
 // Start the server on port 3000
 app.listen(3000, () => {
