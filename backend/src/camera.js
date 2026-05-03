@@ -55,9 +55,10 @@ const startFFmpeg = () => {
     if (ffmpegOn) return;
     console.log('======== Starting ffmpeg ========');
 
-    mkdirSync('./recordings', { recursive: true }); // make the folder, recursive true means there's no error if the folder already exists
-    const filename = `recording_${Date.now()}.mp4`;
-    const filepath = join('./recordings', filename);
+    mkdirSync('../recordings', { recursive: true }); // make the folder, recursive true means there's no error if the folder already exists
+    const now = new Date();
+    const filename = `recording_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}.mp4`;
+    const filepath = join('../recordings', filename);
     recordingStream = createWriteStream(filepath);
     console.log(`Recording to: ${filepath}`);
 
