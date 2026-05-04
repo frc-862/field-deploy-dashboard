@@ -188,4 +188,16 @@ router.post('/stop', (req, res) => {
     }
 });
 
+router.get('/recording/status', (req, res) => {
+    try {
+        res.status(200).json({
+            recordingOn,
+            message: recordingOn ? 'Recording is on' : 'Recording is off',
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting recording status', error: error.message });
+    }
+});
+
 export default router;
