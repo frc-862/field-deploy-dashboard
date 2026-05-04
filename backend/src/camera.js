@@ -45,15 +45,15 @@ const getParams = () => {
     ];
 };
 
-// Execute the ffmpeg command with the parameters
-let ffmpegProcess = null;
-let ffmpegOn = false;
+let recordingOn = false;
 let clients = new Set();
+
+let ffmpegProcess = null; // The process that runs the ffmpeg command
 let recordingStream = null; // stream to write the mp4 recording to
 
-const startFFmpeg = () => {
-    if (ffmpegOn) return;
-    console.log('======== Starting ffmpeg ========');
+const startRecording = () => {
+    if (recordingOn) return;
+    console.log('======== Starting Recording ========');
 
     // Creates the recordings directory if it doesn't exist
     mkdirSync('../recordings', { recursive: true });
@@ -65,7 +65,7 @@ const startFFmpeg = () => {
 
     // Creates a stream into a file (which is at the path defined above)
     recordingStream = createWriteStream(filepath);
-    console.log(`Recording to: ${filepath}`);
+    console.log(`-- Recording to: ${filepath}`);
 
     ffmpegProcess = spawn('ffmpeg', getParams(), {
         stdio: ['ignore', 'pipe', 'pipe', 'pipe'], // ignore stdin, pipe stdout and stderr, 3 is custom pipe for mp4
@@ -83,16 +83,10 @@ const startFFmpeg = () => {
         }
     });
 
-    // mp4 chunks come in through pipe 3
+    // Pipe data from pipe 3 to the recording stream
     ffmpegProcess.stdio[3].on('data', (chunk) => {
         // Write the chunk to the recording stream which leads to the mp4 file
         recordingStream.write(chunk);
-    });
-
-    ffmpegProcess.stdio[3].on('end', () => {
-        // End the recording stream for the mp4 when ffmpeg finishes to prevent video corrupting or ending early
-        recordingStream.end();
-        console.log(`Finished recording gracefully: ${filepath}`);
     });
 
     // Logging for errors and individual frame data
@@ -110,35 +104,29 @@ const startFFmpeg = () => {
         }
     });
 
-    ffmpegOn = true;
+    recordingOn = true;
 };
 
-const stopFFmpeg = () => {
-    if (!ffmpegOn) return;
-    console.log('======== Stopping ffmpeg ========');
-    cleanupFfmpeg();
-    ffmpegOn = false;
+const stopRecording = () => {
+    if (!recordingOn) return;
+    console.log('======== Ending Recording ========');
+    cleanup();
+    recordingOn = false;
 };
 
-// Kills the ffmpeg process
-export const cleanupFfmpeg = () => {
+// Kills the recording stream and then the ffmpeg process
+export const cleanup = () => {
     try {
+        if (recordingStream && !recordingStream.writableEnded) {
+            // Ends the recording stream
+            recordingStream.end();
+            console.log('-- Recording stream ended');
+        }
+
         if (ffmpegProcess && !ffmpegProcess.killed) {
             // Requests for the process (ffmpeg) to be killed
             ffmpegProcess.kill('SIGTERM');
-            console.log('ffmpeg process killed');
-        }
-    } catch (error) {
-        console.error(error);
-    }
-};
-
-// Ends the recording stream
-export const cleanupRecordingStream = () => {
-    try {
-        if (recordingStream && !recordingStream.writableEnded) {
-            recordingStream.end();
-            console.log('Recording stream ended');
+            console.log('-- FFmpeg process killed');
         }
     } catch (error) {
         console.error(error);
@@ -156,23 +144,21 @@ router.get('/stream', (req, res) => {
         });
         res.flushHeaders();
 
-        console.log('Client IP:', req.ip);
-
         // Start the ffmpeg process if this is the first client being added
         if (clients.size === 0) {
-            startFFmpeg();
+            startRecording();
         }
 
         // Add the client to the set of clients
         clients.add(res);
-        console.log('Added client, total clients:', clients.size);
+        console.log('-- Added client, total clients:', clients.size);
 
         // Helper function to disconnect the client
         const disconnect = (type = 'unknown') => {
-            if (clients.delete(res)) console.log(`Removed client by ${type}, total clients:`, clients.size);
+            if (clients.delete(res)) console.log(`-- Removed client by ${type}, total clients:`, clients.size);
 
             if (clients.size === 0) {
-                stopFFmpeg();
+                stopRecording();
             }
         };
 
