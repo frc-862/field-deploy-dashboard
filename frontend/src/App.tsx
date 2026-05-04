@@ -80,9 +80,7 @@ export default function App() {
     return (
         <div style={{ fontFamily: 'sans-serif', padding: 20 }}>
             <h1>Field Deploy Dashboard</h1>
-            <p>
-                Use the controls below to start/stop recording and then start the live camera stream.
-            </p>
+            <p>Use the controls below to start/stop recording and then start the live camera stream.</p>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <button type="button" onClick={startRecording} disabled={recordingStarted}>
                     Start Recording
