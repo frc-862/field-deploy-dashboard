@@ -1,6 +1,6 @@
 import express from 'express';
 import { spawn } from 'node:child_process';
-import { createWriteStream, mkdirSync } from 'node:fs';
+import { createWriteStream, mkdirSync, readdirSync, createReadStream } from 'node:fs';
 import { join } from 'node:path';
 
 const router = express.Router();
@@ -197,6 +197,47 @@ router.get('/recording/status', (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error getting recording status', error: error.message });
+    }
+});
+
+router.get('/recording/list', (req, res) => {
+    try {
+        // Gets the files in the recordings directory
+        const recordings = readdirSync('../recordings');
+
+        res.status(200).json({ recordings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting recording list. Does the recordings directory exist?' });
+    }
+});
+
+router.get('/recording/:filename/download', (req, res) => {
+    try {
+        const { filename } = req.params;
+        const filepath = join('../recordings', filename);
+        const file = createReadStream(filepath);
+
+        // Sets the headers for the response to download the file
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', 'video/mp4'); // Specify the video is an mp4
+
+        // Pipes the file directly to the client
+        file.pipe(res);
+
+        // Logs the download to the console
+        file.on('end', () => {
+            console.log(`-- Downloaded ${filename} to ${req.ip}`);
+        });
+
+        // Logs/catches the error to the console
+        file.on('error', (error) => {
+            console.error(error);
+            res.status(500).json({ message: 'Error downloading recording file', error: error.message });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error downloading recording file', error: error.message });
     }
 });
 
