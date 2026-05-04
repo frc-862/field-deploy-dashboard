@@ -1,6 +1,8 @@
 import express from 'express';
 import cameraRouter from './camera.js';
 import githubRouter from './github.js';
+import wpilibRouter from './wpilib.js';
+
 import { cleanup } from './camera.js';
 
 const app = express();
@@ -8,6 +10,7 @@ const app = express();
 // Include the camera router with the main express app
 app.use('/camera', cameraRouter);
 app.use('/github', githubRouter);
+app.use('/wpilib', wpilibRouter);
 
 // When the server is closed, cleanup the ffmpeg process
 app.on('close', () => {
