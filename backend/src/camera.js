@@ -136,6 +136,10 @@ export const cleanup = () => {
 // Route to get a snapshot from the camera
 router.get('/stream', (req, res) => {
     try {
+        if (!recordingOn) {
+            return res.status(400).json({ message: 'Recording is not on' });
+        }
+
         // Do this before anything can have an opprotunity to get sent to client
         // Defines how we will send the data to the client
         res.writeHead(200, {
@@ -144,11 +148,6 @@ router.get('/stream', (req, res) => {
         });
         res.flushHeaders();
 
-        // Start the ffmpeg process if this is the first client being added
-        if (clients.size === 0) {
-            startRecording();
-        }
-
         // Add the client to the set of clients
         clients.add(res);
         console.log('-- Added client, total clients:', clients.size);
@@ -156,10 +155,6 @@ router.get('/stream', (req, res) => {
         // Helper function to disconnect the client
         const disconnect = (type = 'unknown') => {
             if (clients.delete(res)) console.log(`-- Removed client by ${type}, total clients:`, clients.size);
-
-            if (clients.size === 0) {
-                stopRecording();
-            }
         };
 
         // Clean up the client when the request is closed, aborted, or an error occurs
@@ -170,6 +165,26 @@ router.get('/stream', (req, res) => {
         console.error(error);
 
         res.status(500).json({ message: 'Error getting stream' });
+    }
+});
+
+router.post('/start', (req, res) => {
+    try {
+        startRecording();
+        res.status(200).json({ message: 'Recording started' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error starting recording', error: error.message });
+    }
+});
+
+router.post('/stop', (req, res) => {
+    try {
+        stopRecording();
+        res.status(200).json({ message: 'Recording stopped' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error stopping recording', error: error.message });
     }
 });
 
