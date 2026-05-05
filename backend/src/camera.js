@@ -263,7 +263,7 @@ router.get('/recording/:filename/stream', (req, res) => {
             const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
             // Gets the size of the chunk we want to send, then read that chunk from the file
-            const chunkSize = (end - start) + 1;
+            const chunkSize = end - start + 1;
             const fileStream = createReadStream(filepath, { start, end });
 
             // Sets the headers for the response to send the chunk
@@ -297,14 +297,14 @@ router.get('/recording/:filename/stream', (req, res) => {
                 'Content-Disposition': `inline; filename="${filename}"`,
                 'Content-Type': 'video/mp4',
                 'Accept-Ranges': 'bytes',
-                'Content-Length': fileSize, 
+                'Content-Length': fileSize,
             };
 
             // Writes the headers to the response
             res.writeHead(200, head);
 
             // Pipes the entire file to the client
-            const stream = createReadStream(filepath);  
+            const stream = createReadStream(filepath);
             stream.pipe(res);
 
             // Logs the stream to the console
