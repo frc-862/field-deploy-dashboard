@@ -19,7 +19,7 @@ wss.on('connection', (ws) => {
 
         for (const client of clients) {
             if (client !== ws) {
-                client.send(message);
+                client.send(message.toString());
                 counter++;
             }
         }

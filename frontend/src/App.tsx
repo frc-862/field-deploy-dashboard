@@ -67,6 +67,8 @@ const ws = new WebSocket(`ws://${wsHost}:3001`);
             if (!response.ok) {
                 throw new Error('Failed to start recording');
             }
+            setRecordingStarted(true);
+            setStatusMessage('Recording started');
             socketRef.current != null ? socketRef.current.send('recordingStarted') : console.warn('WebSocket not connected, cannot send recordingStarted message');
         } catch (error) {
             console.error(error);
@@ -78,9 +80,13 @@ const ws = new WebSocket(`ws://${wsHost}:3001`);
         setStatusMessage('');
         try {
             const response = await fetch('/camera/stop', { method: 'POST' });
+            
             if (!response.ok) {
                 throw new Error('Failed to stop recording');
             }
+            setRecordingStarted(false);
+            stopStream();
+            setStatusMessage('Recording stopped');
             socketRef.current != null ? socketRef.current.send('recordingStopped') : console.warn('WebSocket not connected, cannot send recordingStopped message');
         } catch (error) {
             console.error(error);
