@@ -6,7 +6,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "frontend": "cd frontend && npm start",
         "backend": "cd backend && npm start",
-        "dev": "npm run frontend & npm run backend"
+        "ws": "cd backend && npm run ws",
+        "dev": "npm run frontend & npm run backend & npm run ws"
     },
     "repository": {
         "type": "git",
