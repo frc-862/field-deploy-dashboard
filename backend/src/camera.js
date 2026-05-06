@@ -1,6 +1,6 @@
 import express from 'express';
 import { spawn } from 'node:child_process';
-import { createWriteStream, mkdirSync } from 'node:fs';
+import { createWriteStream, mkdirSync, readdirSync, createReadStream, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { broadcast } from './ws.js';
 
@@ -201,6 +201,130 @@ router.get('/recording/status', (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error getting recording status', error: error.message });
+    }
+});
+
+router.get('/recording/list', (req, res) => {
+    try {
+        // Gets the files in the recordings directory
+        const recordings = readdirSync('../recordings');
+
+        res.status(200).json({ recordings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting recording list. Does the recordings directory exist?' });
+    }
+});
+
+router.get('/recording/:filename/download', (req, res) => {
+    try {
+        const { filename } = req.params;
+        const filepath = join('../recordings', filename);
+        const file = createReadStream(filepath);
+
+        // Sets the headers for the response to download the file
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', 'video/mp4'); // Specify the video is an mp4
+
+        // Pipes the file directly to the client
+        file.pipe(res);
+
+        // Logs the download to the console
+        file.on('end', () => {
+            console.log(`-- Downloaded ${filename} to ${req.ip}`);
+        });
+
+        // Logs/catches the error to the console
+        file.on('error', (error) => {
+            console.error(error);
+            res.status(500).json({ message: 'Error downloading recording file', error: error.message });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error downloading recording file', error: error.message });
+    }
+});
+
+// Not true streaming, instead, we send over chunks of the video file to the client
+// Each chunk gets sent over as a partial response to the client
+// The size of each chunk is decided by the range header from the request
+router.get('/recording/:filename/stream', (req, res) => {
+    try {
+        const { filename } = req.params;
+        const filepath = join('../recordings', filename);
+
+        // Gets the file stats to get the file size
+        const fileStats = statSync(filepath);
+        const fileSize = fileStats.size;
+
+        // Gets the range header from the request
+        const range = req.headers.range;
+
+        if (range) {
+            // Gets the start and end of the chunk we want to send from the range header
+            const parts = range.replace(/bytes=/, '').split('-');
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+            // Gets the size of the chunk we want to send, then read that chunk from the file
+            const chunkSize = end - start + 1;
+            const fileStream = createReadStream(filepath, { start, end });
+
+            // Sets the headers for the response to send the chunk
+            // Tells the client the information that it needs to know about what we are sending over
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunkSize.toString(),
+                'Content-Type': 'video/mp4',
+            };
+
+            // Writes the headers to the response
+            res.writeHead(206, head);
+
+            // Pipes the chunk to the client
+            fileStream.pipe(res);
+
+            // Logs the stream to the console
+            fileStream.on('end', () => {
+                console.log(`-- Streamed ${filename} (${start}-${end}) to ${req.ip}`);
+            });
+
+            // Logs/catches the error to the console
+            fileStream.on('error', (error) => {
+                console.error(error);
+                res.status(500).json({ message: 'Error streaming recording file', error: error.message });
+            });
+        } else {
+            // If no range header is provided, we send the entire file to the client
+            const head = {
+                'Content-Disposition': `inline; filename="${filename}"`,
+                'Content-Type': 'video/mp4',
+                'Accept-Ranges': 'bytes',
+                'Content-Length': fileSize,
+            };
+
+            // Writes the headers to the response
+            res.writeHead(200, head);
+
+            // Pipes the entire file to the client
+            const stream = createReadStream(filepath);
+            stream.pipe(res);
+
+            // Logs the stream to the console
+            stream.on('end', () => {
+                console.log(`-- Streamed full file ${filename} to ${req.ip}`);
+            });
+
+            // Logs/catches the error to the console
+            stream.on('error', (error) => {
+                console.error(error);
+                res.status(500).json({ message: 'Error streaming recording file', error: error.message });
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error streaming recording file', error: error.message });
     }
 });
 
