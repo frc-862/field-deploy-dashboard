@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 const router = express.Router();
 import { broadcast } from './ws.js';
+import { stopRecording } from './camera.js';
 
 const runGradleCommand = (command, repo, onClose, onError) => {
     const repoPath = path.join(process.cwd(), '../', 'repos', repo);
@@ -66,7 +67,8 @@ router.get('/deploy/:repo', (req, res) => {
                         message: 'Repository deployed successfully',
                     });
                 } else {
-                                        broadcast('recordingStopped');
+                    stopRecording();
+                    broadcast('recordingStopped');
                     return res.status(500).json({
                         message: 'Error deploying repository',
                         error: 'Gradle deploy command failed',

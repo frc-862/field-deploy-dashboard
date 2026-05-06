@@ -110,7 +110,7 @@ const startRecording = () => {
     broadcast('recordingStarted');
 };
 
-const stopRecording = () => {
+export const stopRecording = () => {
     if (!recordingOn) return;
     console.log('======== Ending Recording ========');
     cleanup();
