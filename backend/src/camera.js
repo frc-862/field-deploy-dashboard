@@ -154,11 +154,11 @@ router.get('/stream', (req, res) => {
 
         // Add the client to the set of clients
         clients.add(res);
-        console.log('-- Added client, total clients:', clients.size);
+        console.log(`-- ${req.ip} joined stream, total clients: ${clients.size}`);
 
         // Helper function to disconnect the client
         const disconnect = (type = 'unknown') => {
-            if (clients.delete(res)) console.log(`-- Removed client by ${type}, total clients:`, clients.size);
+            if (clients.delete(res)) console.log(`-- ${req.ip} left stream by ${type}, total clients:`, clients.size);
         };
 
         // Clean up the client when the request is closed, aborted, or an error occurs
