@@ -34,9 +34,9 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-            const wsHost = window.location.hostname;
-const ws = new WebSocket(`ws://${wsHost}:3001`);
-    socketRef.current = ws;
+        const wsHost = window.location.hostname;
+        const ws = new WebSocket(`ws://${wsHost}:3001`);
+        socketRef.current = ws;
 
         ws.onmessage = (event) => {
             const message = event.data;
@@ -79,7 +79,7 @@ const ws = new WebSocket(`ws://${wsHost}:3001`);
         setStatusMessage('');
         try {
             const response = await fetch('/camera/stop', { method: 'POST' });
-            
+
             if (!response.ok) {
                 throw new Error('Failed to stop recording');
             }

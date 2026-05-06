@@ -14,7 +14,7 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         // let counter = 0;
-        
+
         // console.log('Received message from client:', message.toString());
 
         // for (const client of clients) {
@@ -31,7 +31,7 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         clients.delete(ws);
         console.log('Client disconnected from WebSocket ❌');
-    });  
+    });
 });
 
 export const broadcast = (message) => {
