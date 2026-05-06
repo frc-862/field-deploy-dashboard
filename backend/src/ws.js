@@ -13,17 +13,19 @@ wss.on('connection', (ws) => {
     console.log('Client connected to WebSocket ✅');
 
     ws.on('message', (message) => {
-        let counter = 0;
+        // let counter = 0;
         
-        console.log('Received message from client:', message.toString());
+        // console.log('Received message from client:', message.toString());
 
-        for (const client of clients) {
-            if (client !== ws) {
-                client.send(message.toString());
-                counter++;
-            }
-        }
-        console.log(`Message sent to ${counter} clients`);
+        // for (const client of clients) {
+        //     if (client !== ws) {
+        //         client.send(message.toString());
+        //         counter++;
+        //     }
+        // }
+        // console.log(`Message sent to ${counter} clients`);
+
+        console.warn('Client sent a message, ignored it ❌');
     });
 
     ws.on('close', () => {
@@ -31,6 +33,14 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected from WebSocket ❌');
     });  
 });
+
+export const broadcast = (message) => {
+    for (const client of clients) {
+        if (client.readyState === client.OPEN) {
+            client.send(message);
+        }
+    }
+};
 
 server.listen(3001, '0.0.0.0', () => {
     console.log('WebSocket server is running on ws://localhost:3001');

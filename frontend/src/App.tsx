@@ -69,7 +69,6 @@ const ws = new WebSocket(`ws://${wsHost}:3001`);
             }
             setRecordingStarted(true);
             setStatusMessage('Recording started');
-            socketRef.current != null ? socketRef.current.send('recordingStarted') : console.warn('WebSocket not connected, cannot send recordingStarted message');
         } catch (error) {
             console.error(error);
             setStatusMessage('Could not start recording');
@@ -87,7 +86,6 @@ const ws = new WebSocket(`ws://${wsHost}:3001`);
             setRecordingStarted(false);
             stopStream();
             setStatusMessage('Recording stopped');
-            socketRef.current != null ? socketRef.current.send('recordingStopped') : console.warn('WebSocket not connected, cannot send recordingStopped message');
         } catch (error) {
             console.error(error);
             setStatusMessage('Could not stop recording');

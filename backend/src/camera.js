@@ -2,6 +2,7 @@ import express from 'express';
 import { spawn } from 'node:child_process';
 import { createWriteStream, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { broadcast } from './ws.js';
 
 const router = express.Router();
 
@@ -105,6 +106,8 @@ const startRecording = () => {
     });
 
     recordingOn = true;
+
+    broadcast('recordingStarted');
 };
 
 const stopRecording = () => {
@@ -112,6 +115,7 @@ const stopRecording = () => {
     console.log('======== Ending Recording ========');
     cleanup();
     recordingOn = false;
+    broadcast('recordingStopped');
 };
 
 // Kills the recording stream and then the ffmpeg process
