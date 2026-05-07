@@ -1,22 +1,23 @@
-import express from 'express';
-import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
-
-const app = express();
-const server = createServer(app);
-const wss = new WebSocketServer({ server });
 
 const clients = new Set();
 
-wss.on('connection', (ws) => {
-    clients.add(ws);
-    console.log('Client connected to WebSocket ✅');
+export const attachWebSocketServer = (server) => {
+    // Fixed path so dev proxies can forward WS without colliding with the dev server's own WebSocket.
+    const wss = new WebSocketServer({ server, path: '/ws' });
 
-    ws.on('close', () => {
-        clients.delete(ws);
-        console.log('Client disconnected from WebSocket ❌');
+    wss.on('connection', (ws) => {
+        clients.add(ws);
+        console.log('Client connected to WebSocket ✅');
+
+        ws.on('close', () => {
+            clients.delete(ws);
+            console.log('Client disconnected from WebSocket ❌');
+        });
     });
-});
+
+    return wss;
+};
 
 export const broadcast = (message) => {
     for (const client of clients) {
@@ -25,7 +26,3 @@ export const broadcast = (message) => {
         }
     }
 };
-
-server.listen(3001, '0.0.0.0', () => {
-    console.log('WebSocket server is running on ws://localhost:3001');
-});
