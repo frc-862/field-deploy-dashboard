@@ -1,3 +1,5 @@
+import { createServer } from 'node:http';
+import { attachWebSocketServer } from './ws.js';
 import express from 'express';
 import cameraRouter, { cameraCleanup } from './camera.js';
 import githubRouter from './github.js';
@@ -10,10 +12,16 @@ app.use('/camera', cameraRouter);
 app.use('/github', githubRouter);
 app.use('/wpilib', wpilibRouter);
 
-// Start the server on port 3000
-app.listen(3000, () => {
+const server = createServer(app);
+attachWebSocketServer(server);
+
+// HTTP and WebSocket share the same port (WS clients use ws://host:3000)
+server.listen(3000, () => {
     console.log(
-        '=================================== \n Server is running on port 3000 ✅\n=================================== \n'
+        `===============================================
+        \n Server is running on port 3000 ✅ 
+        \n WebSocket server running on port 3001 ✅ 
+        \n=============================================== \n`
     );
 
     // This can only run on MacOS since it will run with the Mac Mini-- built wiht only mac support in mind
