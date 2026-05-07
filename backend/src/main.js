@@ -1,9 +1,7 @@
 import express from 'express';
-import cameraRouter from './camera.js';
+import cameraRouter, { cameraCleanup } from './camera.js';
 import githubRouter from './github.js';
 import wpilibRouter from './wpilib.js';
-
-import { cleanup } from './camera.js';
 
 const app = express();
 
@@ -11,11 +9,6 @@ const app = express();
 app.use('/camera', cameraRouter);
 app.use('/github', githubRouter);
 app.use('/wpilib', wpilibRouter);
-
-// When the server is closed, cleanup the ffmpeg process
-app.on('close', () => {
-    cleanup();
-});
 
 // Start the server on port 3000
 app.listen(3000, () => {
@@ -29,5 +22,18 @@ app.listen(3000, () => {
         process.exit(1);
     }
 });
+
+const gracefulShutdown = (signal) => {
+    console.log('\n\n=============================================== \n');
+    console.log(`Received ${signal}, shutting down gracefully...\n`);
+    // Cleanup the ffmpeg process
+    cameraCleanup();
+
+    console.log('\n=============================================== \n');
+    process.exit(0);
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Comment to test prettier

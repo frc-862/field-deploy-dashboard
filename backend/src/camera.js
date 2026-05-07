@@ -113,14 +113,15 @@ const startRecording = () => {
 export const stopRecording = () => {
     if (!recordingOn) return;
     console.log('======== Ending Recording ========');
-    cleanup();
+    cameraCleanup();
     recordingOn = false;
     broadcast('recordingStopped');
 };
 
 // Kills the recording stream and then the ffmpeg process
-export const cleanup = () => {
+export const cameraCleanup = () => {
     try {
+        console.log('Starting camera.js cleanup...');
         if (recordingStream && !recordingStream.writableEnded) {
             // Ends the recording stream
             recordingStream.end();
@@ -132,6 +133,7 @@ export const cleanup = () => {
             ffmpegProcess.kill('SIGTERM');
             console.log('-- FFmpeg process killed');
         }
+        console.log('camera.js cleanup complete ✅');
     } catch (error) {
         console.error(error);
     }
