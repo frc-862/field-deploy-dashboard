@@ -27,8 +27,7 @@ This is a dashboard to help manage deploying to the robot through one point, as 
 To deploy this project run
 
 ```bash
-  npm run frontend
-  npm run backend
+  npm start
 ```
 
 
