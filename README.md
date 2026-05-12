@@ -19,6 +19,7 @@ This is a dashboard to help manage deploying to the robot through one point, as 
 - Start/Stop recording on enable/disable
 - Useable/complete frontend
 - Searchable history of deploys and recordings
+- Logging to actual log files
 
 
 ## Deployment 🚀
