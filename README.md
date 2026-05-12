@@ -54,8 +54,7 @@ Install dependencies
 Start the server
 
 ```bash
-  npm run frontend
-  npm run backend
+  npm start
 ```
 
 **or** for quick deployment
