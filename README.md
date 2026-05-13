@@ -57,10 +57,5 @@ Start the server
   npm start
 ```
 
-**or** for quick deployment
-
-```bash
-  npm run dev
-```
 
 ## Star to show support! ⭐️
