@@ -3,3 +3,16 @@ build
 coverage
 .DS_Store
 **/.DS_Store
+*.md
+*.env
+*.json
+*.yml
+*.yaml
+*.sh
+*.bash
+*.zsh
+*.fish
+*.csh
+*.tcsh
+*.ksh
+*.zshrc
