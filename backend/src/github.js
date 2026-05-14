@@ -153,4 +153,63 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
     }
 });
 
+router.post('/repos/:repo/pull', async (req, res) => {
+    try {
+        const repo = req.params.repo;
+        if (!validateInput(repo))
+            return res
+                .status(400)
+                .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
+
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
+
+        // Run the git pull command using the repo path and pull the latest changes
+        const gitPull = spawn('git', ['pull', '--prune'], { cwd: repoPath });
+
+        // Attach the real result of the command to the response
+        gitPull.on('close', (code) => {
+            if (code === 0) {
+                return res.status(200).json({ message: 'Repository pulled successfully', data: { repoPath, repoName: repo } });
+            } else {
+                return res.status(500).json({ message: 'Error pulling repository', error: 'Git pull command failed' });
+            }
+        })
+
+        gitPull.on('error', (_) => {
+            return res.status(500).json({ message: 'Error pulling repository', error: 'Git pull command failed' });
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error pulling repository', error: error.message });
+    }
+});
+
+router.post('/repos/:repo/fetch', async (req, res) => {
+    try {
+        const repo = req.params.repo;
+        if (!validateInput(repo))
+            return res
+                .status(400)
+                .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
+        
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
+
+        // Run the git fetch command using the repo path and fetch the latest changes
+        const gitFetch = spawn('git', ['fetch'], { cwd: repoPath });
+
+        // Attach the real result of the command to the response
+        gitFetch.on('close', (code) => {
+            if (code === 0) {
+                return res.status(200).json({ message: 'Repository fetched successfully', data: { repoPath, repoName: repo } });
+            } else {
+                return res.status(500).json({ message: 'Error fetching repository', error: 'Git fetch command failed' });
+            }
+        });
+        
+        gitFetch.on('error', (_) => {
+            return res.status(500).json({ message: 'Error fetching repository', error: 'Git fetch command failed' });
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching repository', error: error.message });
+    }
+});
 export default router;
