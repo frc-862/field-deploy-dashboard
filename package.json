@@ -15,10 +15,14 @@
     "author": "",
     "license": "MIT",
     "devDependencies": {
+        "concurrently": "^9.2.1",
         "prettier": "^3.8.1"
     },
     "bugs": {
         "url": "https://github.com/frc-862/field-deploy-dashboard/issues"
     },
-    "homepage": "https://github.com/frc-862/field-deploy-dashboard#readme"
+    "homepage": "https://github.com/frc-862/field-deploy-dashboard#readme",
+    "dependencies": {
+        "ws": "^8.20.0"
+    }
 }
