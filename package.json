@@ -6,7 +6,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "frontend": "cd frontend && npm start",
         "backend": "cd backend && npm start",
-        "start": "concurrently -k -n frontend,backend -c cyan,magenta \"npm run frontend\" \"npm run backend\""
+        "start": "concurrently -k -n frontend,backend -c cyan,magenta \"npm run frontend\" \"npm run backend\"",
+        "global-install": "npm install &&  cd frontend && npm install && cd ../backend && npm install"
     },
     "repository": {
         "type": "git",
