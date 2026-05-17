@@ -1,3 +1,5 @@
+import { createServer } from 'node:http';
+import { attachWebSocketServer } from './ws.js';
 import express from 'express';
 import cameraRouter, { cameraCleanup } from './camera.js';
 import githubRouter from './github.js';
@@ -10,17 +12,23 @@ app.use('/camera', cameraRouter);
 app.use('/github', githubRouter);
 app.use('/wpilib', wpilibRouter);
 
-// Start the server on port 3000
-app.listen(3000, () => {
-    console.log(
-        '=================================== \n Server is running on port 3000 ✅\n=================================== \n'
-    );
+const server = createServer(app);
+attachWebSocketServer(server);
 
+// HTTP and WebSocket share the same port (WS clients use ws://host:3000)
+server.listen(3000, () => {
     // This can only run on MacOS since it will run with the Mac Mini-- built wiht only mac support in mind
     if (process.platform !== 'darwin') {
-        console.log('Must be run on a Mac ❌');
+        console.log('Must be run on a Mac ❌\nExiting...');
         process.exit(1);
     }
+
+    console.log(
+        `===============================================
+        \n Server is running on port 3000 ✅ 
+        \n WebSocket server running on port 3000 ✅ 
+        \n=============================================== \n`
+    );
 });
 
 const gracefulShutdown = (signal) => {
@@ -35,5 +43,3 @@ const gracefulShutdown = (signal) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-
-// Comment to test prettier
