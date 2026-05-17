@@ -6,8 +6,12 @@ export const runCommand = (command, args, options = {}) =>
         let stdout = '';
         let stderr = '';
 
-        child.stdout.on('data', (d) => { stdout += d.toString(); });
-        child.stderr.on('data', (d) => { stderr += d.toString(); });
+        child.stdout.on('data', (d) => {
+            stdout += d.toString();
+        });
+        child.stderr.on('data', (d) => {
+            stderr += d.toString();
+        });
 
         child.on('error', reject);
 
