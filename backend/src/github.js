@@ -196,7 +196,7 @@ router.post('/repos/:repo/fetch', async (req, res) => {
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
         // Run the git fetch command using the repo path and fetch the latest changes
-        const gitFetch = spawn('git', ['fetch'], { cwd: repoPath });
+        const gitFetch = spawn('git', ['fetch', '--prune'], { cwd: repoPath });
 
         // Attach the real result of the command to the response
         gitFetch.on('close', (code) => {
