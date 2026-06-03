@@ -21,6 +21,7 @@ const getParams = () => {
         '0:none', // Input device to use
 
         // output 1 for low quality stream
+        '-map', '0:v',
         '-vf',
         'fps=15, scale=iw/2:ih/2', // Frame rate to use for the output and half the resolution
         '-q:v',
@@ -30,6 +31,7 @@ const getParams = () => {
         'pipe:1', // Output to pipe 1 (stdout)
 
         // output 2 for saved mp4 recording
+        '-map', '0:v',
         '-vf',
         'fps=30', // keep full 30fps
         '-vcodec',
@@ -122,17 +124,22 @@ export const stopRecording = () => {
 export const cameraCleanup = () => {
     try {
         console.log('Starting camera.js cleanup...');
-        if (recordingStream && !recordingStream.writableEnded) {
-            // Ends the recording stream
-            recordingStream.end();
-            console.log('-- Recording stream ended');
-        }
 
         if (ffmpegProcess && !ffmpegProcess.killed) {
-            // Requests for the process (ffmpeg) to be killed
-            ffmpegProcess.kill('SIGTERM');
-            console.log('-- FFmpeg process killed');
+            ffmpegProcess.kill('SIGINT');
+            console.log('-- Sent SIGINT to FFmpeg, waiting for clean exit...');
+
+            ffmpegProcess.on('exit', () => {
+                console.log('-- FFmpeg exited cleanly');
+                if (recordingStream && !recordingStream.writableEnded) {
+                    recordingStream.end();
+                    console.log('-- Recording stream ended');
+                }
+            });
+        } else if (recordingStream && !recordingStream.writableEnded) {
+            recordingStream.end();
         }
+
         console.log('camera.js cleanup complete ✅');
     } catch (error) {
         console.error(error);
