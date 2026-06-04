@@ -1,7 +1,7 @@
 import express from 'express';
-import { spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
+import { runCommand } from './utils.js';
 
 const router = express.Router();
 
@@ -16,39 +16,33 @@ const validateInput = (input) => {
     return true;
 };
 
+const commandOutput = ({ code, signal, stdout, stderr }) => ({ code, signal, stdout, stderr });
+
 router.post('/repos/:repo/clone', async (req, res) => {
     try {
-        // Get the repo name directly from the URL
         const repo = req.params.repo;
 
-        // Validate the input is not injecting something that could cause the repo to end up where it shouldn't be
         if (!validateInput(repo))
             return res
                 .status(400)
                 .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
 
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
-
-        // Create the full git url using the repo name
         const repoUrl = `https://github.com/frc-862/${repo}.git`;
 
-        // Run the git clone command using the url and clone it into the repos directory
-        const gitClone = spawn('git', ['clone', repoUrl, repoPath]);
+        const result = await runCommand('git', ['clone', repoUrl, repoPath]);
 
-        // Attach the real result of the command to the response
-        gitClone.on('close', (code) => {
-            if (code === 0) {
-                return res
-                    .status(201)
-                    .json({ message: 'Repository cloned successfully', data: { repoPath, repoName: repo } });
-            } else {
-                return res.status(500).json({ message: 'Error cloning repository', error: 'Git clone command failed' });
-            }
-        });
+        if (result.code === 0) {
+            return res.status(201).json({
+                message: 'Repository cloned successfully',
+                data: { repoPath, repoName: repo, ...commandOutput(result) },
+            });
+        }
 
-        // Handle the errors from the seperate processes
-        gitClone.on('error', (code) => {
-            return res.status(500).json({ message: 'Error cloning repository', error: 'Git clone command failed' });
+        return res.status(500).json({
+            message: 'Error cloning repository',
+            error: 'Git clone command failed',
+            data: commandOutput(result),
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error cloning repository', error: error.message });
@@ -57,7 +51,6 @@ router.post('/repos/:repo/clone', async (req, res) => {
 
 router.get('/repos', async (req, res) => {
     try {
-        // Read the repos directory and list all the repositories
         const repos = fs.readdirSync(path.join(process.cwd(), '../', 'repos'));
         return res.status(200).json({ message: 'Repositories listed successfully', data: repos });
     } catch (error) {
@@ -68,7 +61,7 @@ router.get('/repos', async (req, res) => {
 router.get('/repos/:repo/branches', async (req, res) => {
     try {
         const repo = req.params.repo;
-        // Validate the input is not injecting something that could cause the repo to end up where it shouldn't be
+
         if (!validateInput(repo))
             return res
                 .status(400)
@@ -76,37 +69,25 @@ router.get('/repos/:repo/branches', async (req, res) => {
 
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
-        // Run the git branch command using the repo path and list the branches-- formats the branches with no *
-        const gitBranch = spawn('git', ['branch', '-r', '--format="%(refname:short)"'], { cwd: repoPath });
-        let branches = '';
+        const result = await runCommand('git', ['branch', '-r', '--format="%(refname:short)"'], { cwd: repoPath });
 
-        // Add the results to the branches value
-        gitBranch.stdout.on('data', (data) => (branches += data.toString()));
+        if (result.code === 0) {
+            const formattedBranches = result.stdout
+                .trim()
+                .split('\n')
+                .map((line) => line.trim().split('/').pop().replace(/^"|"$/g, ''))
+                .filter(Boolean);
 
-        // When the command is finished, format the branches and return the response
-        gitBranch.on('close', (code) => {
-            if (code === 0) {
-                // Format branches from string to array
-                const formattedBranches = branches
-                    .trim()
-                    .split('\n')
-                    .map((line) => line.trim().split('/').pop().replace(/^"|"$/g, ''))
-                    .filter(Boolean);
-
-                return res
-                    .status(200)
-                    .json({ message: 'Branches listed successfully', data: { branches: formattedBranches } });
-            } else {
-                return res.status(500).json({ message: 'Error listing branches', error: 'Git branch command failed' });
-            }
-        });
-
-        // Handle the errors from the seperate processes
-        gitBranch.on('error', () => {
-            return res.status(500).json({
-                message: 'Error listing branches',
-                error: 'Git branch command failed. Have you cloned the repo yet?',
+            return res.status(200).json({
+                message: 'Branches listed successfully',
+                data: { branches: formattedBranches, ...commandOutput(result) },
             });
+        }
+
+        return res.status(500).json({
+            message: 'Error listing branches',
+            error: 'Git branch command failed. Have you cloned the repo yet?',
+            data: commandOutput(result),
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error listing branches', error: error.message });
@@ -118,7 +99,6 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
         const repo = req.params.repo;
         const branch = req.params.branch;
 
-        // Validate the input is not injecting something that could cause the repo to end up where it shouldn't be
         if (!(validateInput(branch) && validateInput(repo)))
             return res
                 .status(400)
@@ -126,27 +106,19 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
 
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
-        // Run the git checkout command using the branch name and checkout the branch
-        const gitCheckout = spawn('git', ['checkout', branch], { cwd: repoPath });
+        const result = await runCommand('git', ['checkout', branch], { cwd: repoPath });
 
-        // Attach the real result of the command to the response
-        gitCheckout.on('close', (code) => {
-            if (code === 0) {
-                return res.status(200).json({
-                    message: 'Branch checked out successfully',
-                    data: { repoPath, repoName: repo, branch: branch },
-                });
-            } else {
-                return res.status(500).json({
-                    message: 'Error checking out branch',
-                    error: 'Git checkout command failed. Is the branch name valid?',
-                });
-            }
-        });
+        if (result.code === 0) {
+            return res.status(200).json({
+                message: 'Branch checked out successfully',
+                data: { repoPath, repoName: repo, branch, ...commandOutput(result) },
+            });
+        }
 
-        // Handle the errors from the seperate processes
-        gitCheckout.on('error', (code) => {
-            return res.status(500).json({ message: 'Error checking out branch', error: 'Git checkout command failed' });
+        return res.status(500).json({
+            message: 'Error checking out branch',
+            error: 'Git checkout command failed. Is the branch name valid?',
+            data: commandOutput(result),
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error checking out branch', error: error.message });
@@ -156,6 +128,7 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
 router.post('/repos/:repo/pull', async (req, res) => {
     try {
         const repo = req.params.repo;
+
         if (!validateInput(repo))
             return res
                 .status(400)
@@ -163,22 +136,19 @@ router.post('/repos/:repo/pull', async (req, res) => {
 
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
-        // Run the git pull command using the repo path and pull the latest changes
-        const gitPull = spawn('git', ['pull', '--prune'], { cwd: repoPath });
+        const result = await runCommand('git', ['pull', '--prune'], { cwd: repoPath });
 
-        // Attach the real result of the command to the response
-        gitPull.on('close', (code) => {
-            if (code === 0) {
-                return res
-                    .status(200)
-                    .json({ message: 'Repository pulled successfully', data: { repoPath, repoName: repo } });
-            } else {
-                return res.status(500).json({ message: 'Error pulling repository', error: 'Git pull command failed' });
-            }
-        });
+        if (result.code === 0) {
+            return res.status(200).json({
+                message: 'Repository pulled successfully',
+                data: { repoPath, repoName: repo, ...commandOutput(result) },
+            });
+        }
 
-        gitPull.on('error', (_) => {
-            return res.status(500).json({ message: 'Error pulling repository', error: 'Git pull command failed' });
+        return res.status(500).json({
+            message: 'Error pulling repository',
+            error: 'Git pull command failed',
+            data: commandOutput(result),
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error pulling repository', error: error.message });
@@ -188,6 +158,7 @@ router.post('/repos/:repo/pull', async (req, res) => {
 router.post('/repos/:repo/fetch', async (req, res) => {
     try {
         const repo = req.params.repo;
+
         if (!validateInput(repo))
             return res
                 .status(400)
@@ -195,27 +166,23 @@ router.post('/repos/:repo/fetch', async (req, res) => {
 
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
-        // Run the git fetch command using the repo path and fetch the latest changes
-        const gitFetch = spawn('git', ['fetch', '--prune'], { cwd: repoPath });
+        const result = await runCommand('git', ['fetch', '--prune'], { cwd: repoPath });
 
-        // Attach the real result of the command to the response
-        gitFetch.on('close', (code) => {
-            if (code === 0) {
-                return res
-                    .status(200)
-                    .json({ message: 'Repository fetched successfully', data: { repoPath, repoName: repo } });
-            } else {
-                return res
-                    .status(500)
-                    .json({ message: 'Error fetching repository', error: 'Git fetch command failed' });
-            }
-        });
+        if (result.code === 0) {
+            return res.status(200).json({
+                message: 'Repository fetched successfully',
+                data: { repoPath, repoName: repo, ...commandOutput(result) },
+            });
+        }
 
-        gitFetch.on('error', (_) => {
-            return res.status(500).json({ message: 'Error fetching repository', error: 'Git fetch command failed' });
+        return res.status(500).json({
+            message: 'Error fetching repository',
+            error: 'Git fetch command failed',
+            data: commandOutput(result),
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching repository', error: error.message });
     }
 });
+
 export default router;
