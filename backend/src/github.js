@@ -166,7 +166,7 @@ router.post('/repos/:repo/fetch', async (req, res) => {
 
         const repoPath = path.join(process.cwd(), '../', 'repos', repo);
 
-        const result = await runCommand('git', ['fetch'], { cwd: repoPath });
+        const result = await runCommand('git', ['fetch', '--prune'], { cwd: repoPath });
 
         if (result.code === 0) {
             return res.status(200).json({
