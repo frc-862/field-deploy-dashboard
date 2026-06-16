@@ -41,7 +41,7 @@ export default function App() {
         ws.onmessage = (event) => {
             const message = event.data;
             const data = JSON.parse(message);
-            
+
             if (message.type === 'recording_status' && message.data.recordingOn) {
                 setRecordingStarted(true);
                 setStatusMessage('Recording started');

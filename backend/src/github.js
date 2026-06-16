@@ -35,7 +35,7 @@ router.post('/repos/:repo/clone', async (req, res) => {
 
         if (result.code === 0) {
             broadcast({ type: 'github_repo_clone', data: { repoPath, repoName: repo } });
-            
+
             return res.status(201).json({
                 message: 'Repository cloned successfully',
                 data: { repoPath, repoName: repo, ...commandOutput(result) },
@@ -145,7 +145,7 @@ router.post('/repos/:repo/pull', async (req, res) => {
 
         if (result.code === 0) {
             broadcast({ type: 'github_repo_pull', data: { repoPath, repoName: repo } });
-            
+
             return res.status(200).json({
                 message: 'Repository pulled successfully',
                 data: { repoPath, repoName: repo, ...commandOutput(result) },
@@ -177,7 +177,7 @@ router.post('/repos/:repo/fetch', async (req, res) => {
 
         if (result.code === 0) {
             broadcast({ type: 'github_repo_fetch', data: { repoPath, repoName: repo } });
-            
+
             return res.status(200).json({
                 message: 'Repository fetched successfully',
                 data: { repoPath, repoName: repo, ...commandOutput(result) },
