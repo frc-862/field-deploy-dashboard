@@ -22,7 +22,7 @@ export const attachWebSocketServer = (server) => {
 export const broadcast = (message) => {
     for (const client of clients) {
         if (client.readyState === client.OPEN) {
-            client.send(message);
+            client.send(JSON.stringify({ message }));
         }
     }
 };
