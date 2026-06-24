@@ -1,21 +1,9 @@
 import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
-import { runCommand } from './utils.js';
-import { broadcast } from './ws.js';
+import { runCommand, validateInput } from './utils.js';
 
 const router = express.Router();
-
-// Helper function to validate there are no invalid or malicious characters in the input
-const validateInput = (input) => {
-    if (!input) return false;
-    if (input.includes(' ')) return false;
-    if (input.includes('|')) return false;
-    if (input.includes('/')) return false;
-    if (input.includes('?')) return false;
-
-    return true;
-};
 
 const commandOutput = ({ code, signal, stdout, stderr }) => ({ code, signal, stdout, stderr });
 

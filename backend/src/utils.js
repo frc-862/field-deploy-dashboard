@@ -19,3 +19,14 @@ export const runCommand = (command, args, options = {}) =>
             resolve({ code, signal, stdout, stderr });
         });
     });
+
+// Helper function to validate there are no invalid or malicious characters in the input
+export const validateInput = (input) => {
+    if (!input) return false;
+    if (input.includes(' ')) return false;
+    if (input.includes('|')) return false;
+    if (input.includes('/')) return false;
+    if (input.includes('?')) return false;
+
+    return true;
+};

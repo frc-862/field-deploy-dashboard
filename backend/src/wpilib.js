@@ -1,92 +1,79 @@
 import express from 'express';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 const router = express.Router();
-import { broadcast } from './ws.js';
-import { stopRecording } from './camera.js';
+import fs from 'node:fs';
+import { runCommand, validateInput } from './utils.js';
 
-const runGradleCommand = (command, repo, onClose, onError) => {
-    const repoPath = path.join(process.cwd(), '../', 'repos', repo);
-
-    const deploy = spawn('sh', ['gradlew', command], { cwd: repoPath });
-
-    // TODO: ADD SOME WAY TO LOG THE OUTPUT OF THE COMMAND
-    // deploy.stdout.on('data', (data) => {
-    //     console.log(data.toString());
-    // });
-
-    // deploy.stderr.on('data', (data) => {
-    //     console.error(data.toString());
-    // });
-
-    deploy.on('close', onClose);
-
-    deploy.on('error', onError);
-};
-
-router.get('/build/:repo', (req, res) => {
+router.post('/build/:repo', async (req, res) => {
     try {
-        runGradleCommand(
-            'build',
-            req.params.repo,
-            (code) => {
-                if (code === 0) {
-                    return res.status(200).json({
-                        message: 'Repository built successfully',
-                    });
-                } else {
-                    return res.status(500).json({
-                        message: 'Error building repository',
-                        error: 'Gradle build command failed',
-                    });
-                }
-            },
-            (error) => {
-                return res.status(500).json({
-                    message: 'Error building repository',
-                    error: error.message,
-                });
-            }
-        );
+        const repo = req.params.repo;
+
+        if (!validateInput(repo))
+            return res
+                .status(400)
+                .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
+
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
+
+        if (!fs.existsSync(repoPath)) {
+            return res.status(404).json({ message: 'Repository not found', error: 'Repository does not exist' });
+        }
+
+        const result = await runCommand('sh', ['gradlew', 'build'], {
+            cwd: repoPath,
+        });
+        if (result.code === 0) {
+            return res.status(200).json({
+                message: 'Repository built successfully',
+                data: result,
+            });
+        } else {
+            return res.status(500).json({
+                message: 'Error building repository',
+                error: 'Gradle build command failed',
+                data: result,
+            });
+        }
     } catch (error) {
         return res.status(500).json({
-            message: 'Error building repository',
+            message: 'Error spawning process',
             error: error.message,
         });
     }
 });
 
-router.get('/deploy/:repo', (req, res) => {
+router.post('/deploy/:repo', async (req, res) => {
     try {
-        runGradleCommand(
-            'deploy',
-            req.params.repo,
-            (code) => {
-                if (code === 0) {
-                    return res.status(200).json({
-                        message: 'Repository deployed successfully',
-                    });
-                } else {
-                    stopRecording();
-                    broadcast('recordingStopped');
-                    return res.status(500).json({
-                        message: 'Error deploying repository',
-                        error: 'Gradle deploy command failed',
-                    });
-                }
-            },
-            (error) => {
-                return res.status(500).json({
-                    message: 'Error deploying repository',
-                    error: error.message,
-                });
-            }
-        );
-    } catch (error) {
-        return res.status(500).json({
-            message: 'Error deploying repository',
-            error: error.message,
+        const repo = req.params.repo;
+
+        if (!validateInput(repo))
+            return res
+                .status(400)
+                .json({ message: 'Invalid repository name', error: 'Repository name contains invalid characters' });
+
+        const repoPath = path.join(process.cwd(), '../', 'repos', repo);
+
+        if (!fs.existsSync(repoPath)) {
+            return res.status(404).json({ message: 'Repository not found', error: 'Repository does not exist' });
+        }
+
+        const result = await runCommand('sh', ['gradlew', 'deploy'], {
+            cwd: repoPath,
         });
+        if (result.code === 0) {
+            return res.status(200).json({
+                message: 'Repository deployed successfully',
+                data: result,
+            });
+        } else {
+            return res.status(500).json({
+                message: 'Error deploying repository',
+                error: 'Gradle deploy command failed',
+                data: result,
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: 'Error spawning process', error: error.message });
     }
 });
 
