@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import { runCommand, validateInput } from './utils.js';
+import { broadcast } from './ws.js';
 
 const router = express.Router();
 
