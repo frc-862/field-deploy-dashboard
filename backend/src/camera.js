@@ -111,7 +111,7 @@ const startRecording = () => {
 
     recordingOn = true;
 
-    broadcast('recordingStarted');
+    broadcast({ type: 'recording_status', data: { recordingOn: true } });
 };
 
 export const stopRecording = () => {
@@ -119,7 +119,7 @@ export const stopRecording = () => {
     console.log('======== Ending Recording ========');
     cameraCleanup();
     recordingOn = false;
-    broadcast('recordingStopped');
+    broadcast({ type: 'recording_status', data: { recordingOn: false } });
 };
 
 // Kills the recording stream and then the ffmpeg process

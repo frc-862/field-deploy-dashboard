@@ -40,11 +40,12 @@ export default function App() {
 
         ws.onmessage = (event) => {
             const message = event.data;
-            console.log('[FRONTEND] Received WebSocket message:', message);
-            if (message === 'recordingStarted') {
+            const data = JSON.parse(message);
+
+            if (message.type === 'recording_status' && message.data.recordingOn) {
                 setRecordingStarted(true);
                 setStatusMessage('Recording started');
-            } else if (message === 'recordingStopped') {
+            } else if (message.type === 'recording_status' && !message.data.recordingOn) {
                 setRecordingStarted(false);
                 stopStream();
                 setStatusMessage('Recording stopped');

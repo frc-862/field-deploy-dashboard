@@ -22,6 +22,8 @@ router.post('/repos/:repo/clone', async (req, res) => {
         const result = await runCommand('git', ['clone', repoUrl, repoPath]);
 
         if (result.code === 0) {
+            broadcast({ type: 'github_repo_clone', data: { repoPath, repoName: repo } });
+
             return res.status(201).json({
                 message: 'Repository cloned successfully',
                 data: { repoPath, repoName: repo, ...commandOutput(result) },
@@ -98,6 +100,8 @@ router.post('/repos/:repo/checkout/:branch', async (req, res) => {
         const result = await runCommand('git', ['checkout', branch], { cwd: repoPath });
 
         if (result.code === 0) {
+            broadcast({ type: 'branch_checkout', data: { repoPath, repoName: repo, branch } });
+
             return res.status(200).json({
                 message: 'Branch checked out successfully',
                 data: { repoPath, repoName: repo, branch, ...commandOutput(result) },
@@ -128,6 +132,8 @@ router.post('/repos/:repo/pull', async (req, res) => {
         const result = await runCommand('git', ['pull', '--prune'], { cwd: repoPath });
 
         if (result.code === 0) {
+            broadcast({ type: 'github_repo_pull', data: { repoPath, repoName: repo } });
+
             return res.status(200).json({
                 message: 'Repository pulled successfully',
                 data: { repoPath, repoName: repo, ...commandOutput(result) },
@@ -158,6 +164,8 @@ router.post('/repos/:repo/fetch', async (req, res) => {
         const result = await runCommand('git', ['fetch', '--prune'], { cwd: repoPath });
 
         if (result.code === 0) {
+            broadcast({ type: 'github_repo_fetch', data: { repoPath, repoName: repo } });
+
             return res.status(200).json({
                 message: 'Repository fetched successfully',
                 data: { repoPath, repoName: repo, ...commandOutput(result) },
