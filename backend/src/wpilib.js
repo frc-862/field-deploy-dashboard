@@ -3,6 +3,7 @@ import path from 'node:path';
 const router = express.Router();
 import fs from 'node:fs';
 import { runCommand, validateInput } from './utils.js';
+import { broadcast } from './ws.js';
 
 router.post('/build/:repo', async (req, res) => {
     try {
@@ -61,6 +62,7 @@ router.post('/deploy/:repo', async (req, res) => {
             cwd: repoPath,
         });
         if (result.code === 0) {
+            broadcast({ type: 'wpilib_repo_deploy', data: { repoPath, repoName: repo } });
             return res.status(200).json({
                 message: 'Repository deployed successfully',
                 data: result,
