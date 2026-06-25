@@ -27,11 +27,7 @@ export function saveGitState(state: GitState): void {
     localStorage.setItem(GIT_STATE_KEY, JSON.stringify(state));
 }
 
-export function applyWsGitEvent(
-    type: WsEventType,
-    data: Record<string, unknown>,
-    prev: GitState
-): GitState | null {
+export function applyWsGitEvent(type: WsEventType, data: Record<string, unknown>, prev: GitState): GitState | null {
     switch (type) {
         case 'branch_checkout':
             return {

@@ -110,11 +110,7 @@ export function CameraPanel({
 
                         {selectedRecording && (
                             <div className="recordings-player">
-                                <video
-                                    key={selectedRecording}
-                                    controls
-                                    src={recordingStreamUrl(selectedRecording)}
-                                />
+                                <video key={selectedRecording} controls src={recordingStreamUrl(selectedRecording)} />
                                 <div className="btn-row">
                                     <a
                                         className="btn btn--blue"

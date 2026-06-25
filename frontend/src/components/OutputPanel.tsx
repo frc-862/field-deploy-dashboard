@@ -47,9 +47,7 @@ export function OutputPanel({ activity, terminalText, onClearTerminal }: OutputP
                     {terminalText ? (
                         <pre className="terminal">{terminalText}</pre>
                     ) : (
-                        <pre className="terminal terminal--empty">
-                            Git, Gradle build, and deploy output shows here.
-                        </pre>
+                        <pre className="terminal terminal--empty">Git, Gradle build, and deploy output shows here.</pre>
                     )}
                 </div>
             </section>

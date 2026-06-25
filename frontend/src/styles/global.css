@@ -325,7 +325,10 @@ select {
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+    transition:
+        background 0.12s,
+        border-color 0.12s,
+        opacity 0.12s;
     white-space: nowrap;
 }
 

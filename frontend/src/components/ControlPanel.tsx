@@ -39,7 +39,8 @@ export function ControlPanel({
     onBuild,
     onDeploy,
 }: ControlPanelProps) {
-    const gitBusy = busyAction === 'checkout' || busyAction === 'pull' || busyAction === 'fetch' || busyAction === 'clone';
+    const gitBusy =
+        busyAction === 'checkout' || busyAction === 'pull' || busyAction === 'fetch' || busyAction === 'clone';
     const deployBusy = busyAction === 'build' || busyAction === 'deploy';
 
     return (
@@ -125,10 +126,20 @@ export function ControlPanel({
                     >
                         Checkout
                     </button>
-                    <button type="button" className="btn btn--blue" onClick={onPull} disabled={!selectedRepo || gitBusy}>
+                    <button
+                        type="button"
+                        className="btn btn--blue"
+                        onClick={onPull}
+                        disabled={!selectedRepo || gitBusy}
+                    >
                         Pull
                     </button>
-                    <button type="button" className="btn btn--blue" onClick={onFetch} disabled={!selectedRepo || gitBusy}>
+                    <button
+                        type="button"
+                        className="btn btn--blue"
+                        onClick={onFetch}
+                        disabled={!selectedRepo || gitBusy}
+                    >
                         Fetch
                     </button>
                 </div>
@@ -136,9 +147,7 @@ export function ControlPanel({
 
             <section className="panel">
                 <h2 className="panel__title panel__title--orange">Deploy</h2>
-                <p className="hint">
-                    {selectedRepo ? `Target: ${selectedRepo}` : 'Select a repository first'}
-                </p>
+                <p className="hint">{selectedRepo ? `Target: ${selectedRepo}` : 'Select a repository first'}</p>
                 <div className="btn-row">
                     <button
                         type="button"

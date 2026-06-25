@@ -9,8 +9,7 @@ type HeaderProps = {
 };
 
 export function Header({ wsStatus, theme, gitStatus, onToggleTheme }: HeaderProps) {
-    const wsLabel =
-        wsStatus === 'connected' ? 'Connected' : wsStatus === 'connecting' ? 'Connecting…' : 'Disconnected';
+    const wsLabel = wsStatus === 'connected' ? 'Connected' : wsStatus === 'connecting' ? 'Connecting…' : 'Disconnected';
 
     const hasRepo = Boolean(gitStatus.repoName);
     const hasBranch = Boolean(gitStatus.branch);

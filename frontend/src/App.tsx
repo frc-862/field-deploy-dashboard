@@ -89,15 +89,12 @@ export default function App() {
         saveGitState(next);
     }, []);
 
-    const addActivity = useCallback(
-        (entry: Omit<ActivityEntry, 'id' | 'time'> & { time?: Date }) => {
-            setActivity((prev) => [
-                { id: nextActivityId(), time: entry.time ?? new Date(), ...entry },
-                ...prev.slice(0, 49),
-            ]);
-        },
-        []
-    );
+    const addActivity = useCallback((entry: Omit<ActivityEntry, 'id' | 'time'> & { time?: Date }) => {
+        setActivity((prev) => [
+            { id: nextActivityId(), time: entry.time ?? new Date(), ...entry },
+            ...prev.slice(0, 49),
+        ]);
+    }, []);
 
     const appendTerminal = useCallback((text: string) => {
         setTerminalText((prev) => (prev ? `${prev}\n\n${text}` : text));
@@ -287,8 +284,10 @@ export default function App() {
     };
 
     const handleCheckout = () =>
-        void runAction('checkout', `git checkout ${selectedBranch}`, () =>
-            checkoutBranch(selectedRepo, selectedBranch),
+        void runAction(
+            'checkout',
+            `git checkout ${selectedBranch}`,
+            () => checkoutBranch(selectedRepo, selectedBranch),
             (data) => {
                 const d = data as { repoName?: string; branch?: string };
                 updateGitStatus(gitStateFromCheckout(d.repoName ?? selectedRepo, d.branch ?? selectedBranch));
@@ -298,15 +297,21 @@ export default function App() {
         });
 
     const handlePull = () =>
-        void runAction('pull', `git pull ${selectedRepo}`, () => pullRepo(selectedRepo), () => {
-            setGitStatus((prev) => {
-                const next = gitStateFromPull(selectedRepo, prev);
-                saveGitState(next);
-                return next;
-            });
-        });
+        void runAction(
+            'pull',
+            `git pull ${selectedRepo}`,
+            () => pullRepo(selectedRepo),
+            () => {
+                setGitStatus((prev) => {
+                    const next = gitStateFromPull(selectedRepo, prev);
+                    saveGitState(next);
+                    return next;
+                });
+            }
+        );
     const handleFetch = () => void runAction('fetch', `git fetch ${selectedRepo}`, () => fetchRepo(selectedRepo));
-    const handleBuild = () => void runAction('build', `./gradlew build (${selectedRepo})`, () => buildRepo(selectedRepo));
+    const handleBuild = () =>
+        void runAction('build', `./gradlew build (${selectedRepo})`, () => buildRepo(selectedRepo));
     const handleDeploy = () =>
         void runAction('deploy', `./gradlew deploy (${selectedRepo})`, () => deployRepo(selectedRepo));
 
