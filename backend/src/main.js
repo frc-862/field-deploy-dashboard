@@ -4,6 +4,7 @@ import express from 'express';
 import cameraRouter, { cameraCleanup } from './camera.js';
 import githubRouter from './github.js';
 import wpilibRouter from './wpilib.js';
+import networkRouter from './network.js';
 
 const app = express();
 
@@ -11,6 +12,7 @@ const app = express();
 app.use('/camera', cameraRouter);
 app.use('/github', githubRouter);
 app.use('/wpilib', wpilibRouter);
+app.use('/network', networkRouter);
 
 const server = createServer(app);
 attachWebSocketServer(server);

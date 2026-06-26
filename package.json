@@ -24,6 +24,7 @@
     },
     "homepage": "https://github.com/frc-862/field-deploy-dashboard#readme",
     "dependencies": {
+        "node-wifi": "^2.0.16",
         "ws": "^8.20.0"
     }
 }
